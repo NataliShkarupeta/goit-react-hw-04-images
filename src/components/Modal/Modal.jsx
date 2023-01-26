@@ -1,32 +1,32 @@
 import PropTypes from 'prop-types';
-import { Component } from 'react';
+import { useEffect } from 'react';
 import { Backdrop, ModalContent } from './Modal.styled';
 
-export class Modal extends Component {
-  componentDidMount() {
-    window.addEventListener('keydown', this.closeModal);
-  }
+export const Modal = ({ show, alt, src }) => {
+  useEffect(() => {
+    
+    const closeModal = e => {
+      if (e.code === 'Escape') {
+        show();
+      }
+    };
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.closeModal);
-  }
+    window.addEventListener('keydown', closeModal);
+    
+    return () => {
+      window.removeEventListener('keydown', closeModal);
+    };
+  }, [show]);
 
-  closeModal = e => {
-    if (e.code === 'Escape') {
-      this.props.show();
-    }
-  };
+  return (
+    <Backdrop onClick={() => show()}>
+      <ModalContent>
+        <img src={src} alt={alt} />
+      </ModalContent>
+    </Backdrop>
+  );
+};
 
-  render() {
-    return (
-      <Backdrop onClick={() => this.props.show()}>
-        <ModalContent>
-          <img src={this.props.src} alt={this.props.alt} />
-        </ModalContent>
-      </Backdrop>
-    );
-  }
-}
 
 Modal.propTypes = {
   show: PropTypes.func.isRequired,

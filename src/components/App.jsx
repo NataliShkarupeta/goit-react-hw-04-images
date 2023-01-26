@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Searchbar } from './Searchbar/Searchbar';
 import { fetchApi } from 'service';
 import { Rings } from 'react-loader-spinner';
@@ -7,92 +7,83 @@ import { Gallery } from './ImageGallery/ImageGallery';
 import { ButtonLoad } from './Button/Button';
 import Notiflix from 'notiflix';
 
-export class App extends Component {
-  state = {
-    namePicture: '',
-    pictures: [],
-    loading: false,
-    image: '',
-    page: 1,
-    hideButton: false,
-  };
+export const App = () => {
+  const [namePicture, setNamePicture] = useState('');
+  const [pictures, setPictures] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState('');
+  const [page, setPage] = useState(1);
+  const [hideButton, setHideButton] = useState(false);
 
-  componentDidUpdate(_, prevState) {
-    const { namePicture, page } = this.state;
-    if (prevState.namePicture !== namePicture || prevState.page !== page) {
-      this.getPictures();
-    }
+  useEffect(() => {
 
-    if (prevState.namePicture !== namePicture && namePicture !== '') {
-      this.setState({ page: 1, pictures: [], hideButton: false });
-    }
-  }
+    const getPictures = () => {
+      setLoading(true);
+      fetchApi(namePicture, page)
+        .then(respons => {
+          if (respons.ok) {
+            return respons.json();
+          }
+          return Promise.reject(new Error('Sorry no image'));
+        })
+        .then(pictures => {
+          console.log(pictures.hits.length);
+          if (pictures.hits.length === 0) {
+            createMassage();
+          }
+          if (pictures.hits.length < 12) {
+            setHideButton(true);
+          }
 
-  getPictures = () => {
-    const { namePicture, page } = this.state;
-    this.setState({ loading: true });
-    fetchApi(namePicture, page)
-      .then(respons => {
-        if (respons.ok) {
-          return respons.json();
-        }
-        return Promise.reject(new Error('Sorry no image'));
-      })
-      .then(pictures => {
-        console.log(pictures.hits.length);
-        if (pictures.hits.length === 0) {
-          this.createMassage();
-        }
-        if (pictures.hits.length < 12) {
-          this.setState({ hideButton: true });
-        }
+          setPictures(prev => [...prev, ...pictures.hits]);
+        })
 
-        this.setState(prev => ({
-          pictures: [...prev.pictures, ...pictures.hits],
-        }));
-      })
+        .catch(error => console.log(error))
+        .finally(() => setLoading(false));
+    };
 
-      .catch(error => console.log(error))
-      .finally(() => this.setState({ loading: false }));
-  };
 
-  createMassage = () => {
+    if (namePicture !== '') getPictures();
+    setPage(1);
+    setPictures([]);
+    setHideButton(false);
+  }, [namePicture, page]);
+ 
+
+  const createMassage = () => {
     Notiflix.Notify.info('Sorry no image');
   };
 
-  valueFromInput = namePicture => {
-    this.setState({ namePicture });
+  const valueFromInput = namePicture => {
+    setNamePicture(namePicture);
   };
 
-  onLoadMore = () => {
-    this.setState(prev => ({ page: prev.page + 1 }));
+  const onLoadMore = () => {
+    setPage(prev => prev.page + 1);
   };
 
-  getSrcToModal = largeImageURL => {
-    this.setState({ image: largeImageURL });
+  const getSrcToModal = largeImageURL => {
+    setImage(largeImageURL);
   };
 
-  toggleModal = () => {
-    this.setState({ image: '' });
+  const toggleModal = () => {
+    setImage('');
   };
 
-  render() {
-    const { pictures, loading, image, hideButton } = this.state;
-    return (
-      <div>
-        <Searchbar onSubmit={this.valueFromInput} />
-        {pictures && (
-          <Gallery picturs={pictures} showBigImg={this.getSrcToModal} />
-        )}{' '}
-        {pictures.length !== 0 && hideButton === false && (
-          <ButtonLoad clicked={this.onLoadMore} />
-        )}
-        {/* {pictures.length === 0 && Notiflix.Notify.info('Sorry no image')} */}
-        {loading && <Rings />}
-        {image && (
-          <Modal show={this.toggleModal} src={image} alt="wonderful picture" />
-        )}
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <Searchbar onSubmit={valueFromInput} />
+      {pictures && (
+        <Gallery picturs={pictures} showBigImg={getSrcToModal} />
+      )}{' '}
+      {pictures.length !== 0 && hideButton === false && (
+        <ButtonLoad clicked={onLoadMore} />
+      )}
+      {loading && <Rings />}
+      {image && (
+        <Modal show={toggleModal} src={image} alt="wonderful picture" />
+      )}
+    </div>
+  );
+};
+
