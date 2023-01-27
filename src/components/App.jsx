@@ -15,10 +15,6 @@ export const App = () => {
   const [page, setPage] = useState(1);
   const [hideButton, setHideButton] = useState(false);
 
-  // const prevNamePicture = useRef(namePicture);
-  // console.log('namePicture=>', namePicture);
-  // console.log('before useEffect=>', prevNamePicture.current);
-
   useEffect(() => {
     const getPictures = () => {
       setLoading(true);
@@ -30,6 +26,7 @@ export const App = () => {
           return Promise.reject(new Error('Sorry no image'));
         })
         .then(pictures => {
+          console.log(pictures.length);
           if (pictures.hits.length === 0) {
             createMassage();
           }
@@ -44,9 +41,7 @@ export const App = () => {
         .finally(() => setLoading(false));
     };
 
-      if (namePicture) getPictures();
-    // prevNamePicture.current = namePicture;
-    // console.log('in useEff=>', prevNamePicture.current);
+    if (namePicture) getPictures();
   }, [namePicture, page]);
 
   const createMassage = () => {
