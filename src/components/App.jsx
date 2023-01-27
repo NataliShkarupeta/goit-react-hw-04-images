@@ -15,8 +15,11 @@ export const App = () => {
   const [page, setPage] = useState(1);
   const [hideButton, setHideButton] = useState(false);
 
-  useEffect(() => {
+  // const prevNamePicture = useRef(namePicture);
+  // console.log('namePicture=>', namePicture);
+  // console.log('before useEffect=>', prevNamePicture.current);
 
+  useEffect(() => {
     const getPictures = () => {
       setLoading(true);
       fetchApi(namePicture, page)
@@ -27,7 +30,6 @@ export const App = () => {
           return Promise.reject(new Error('Sorry no image'));
         })
         .then(pictures => {
-          console.log(pictures.hits.length);
           if (pictures.hits.length === 0) {
             createMassage();
           }
@@ -42,13 +44,10 @@ export const App = () => {
         .finally(() => setLoading(false));
     };
 
-
-    if (namePicture !== '') getPictures();
-    setPage(1);
-    setPictures([]);
-    setHideButton(false);
+      if (namePicture) getPictures();
+    // prevNamePicture.current = namePicture;
+    // console.log('in useEff=>', prevNamePicture.current);
   }, [namePicture, page]);
- 
 
   const createMassage = () => {
     Notiflix.Notify.info('Sorry no image');
@@ -56,10 +55,13 @@ export const App = () => {
 
   const valueFromInput = namePicture => {
     setNamePicture(namePicture);
+    setPage(1);
+    setPictures([]);
+    setHideButton(false);
   };
 
   const onLoadMore = () => {
-    setPage(prev => prev.page + 1);
+    setPage(prev => prev + 1);
   };
 
   const getSrcToModal = largeImageURL => {
@@ -86,4 +88,3 @@ export const App = () => {
     </div>
   );
 };
-
